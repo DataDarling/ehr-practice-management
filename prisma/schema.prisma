@@ -1,0 +1,123 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+enum AppointmentType {
+  CHECKUP
+  FOLLOW_UP
+  CONSULTATION
+  URGENT
+  NEW_PATIENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          UserRole  @default(RECEPTIONIST)
+  doctorId      String?   @unique
+  doctor        Doctor?   @relation(fields: [doctorId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Doctor {
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  phone        String?
+  specialty    String
+  licenseNo    String?
+  user         User?
+  appointments Appointment[]
+  notes        ClinicalNote[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Patient {
+  id              String        @id @default(cuid())
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  gender          Gender
+  email           String?
+  phone           String
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  insuranceProvider String?
+  insuranceId     String?
+  emergencyContact  String?
+  emergencyPhone    String?
+  medicalHistory  String?
+  allergies       String?
+  medications     String?
+  appointments    Appointment[]
+  notes           ClinicalNote[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Appointment {
+  id           String            @id @default(cuid())
+  patientId    String
+  patient      Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId     String
+  doctor       Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  dateTime     DateTime
+  endTime      DateTime
+  type         AppointmentType
+  status       AppointmentStatus @default(SCHEDULED)
+  reason       String?
+  notes        ClinicalNote[]
+  waitTime     Int?              // in minutes
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([doctorId, dateTime])
+  @@index([patientId])
+}
+
+model ClinicalNote {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patientId     String
+  patient       Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId      String
+  doctor        Doctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  subjective    String?     // Chief complaint, symptoms
+  objective     String?     // Vitals, examination findings
+  assessment    String?     // Diagnosis
+  plan          String?     // Treatment plan
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
