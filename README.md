@@ -70,7 +70,7 @@ This project showcases a comprehensive healthcare management system with role-ba
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/ehr-practice-management.git
+   git clone https://github.com/DataDarling/ehr-practice-management.git
    cd ehr-practice-management
    ```
 
